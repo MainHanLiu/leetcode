@@ -196,8 +196,6 @@ public:
 };
 ```
 
-![image-20220107115227485](E:\研二上\leetcode\README\image\image-20220107115227485.png)？？？
-
 #### 转化字符串
 
 ```
@@ -724,9 +722,9 @@ public:
 };
 ```
 
-![image-20220109204710773](E:\研二上\leetcode\README\image\image-20220109204710773.png)
+![image-20220109204710773](E:\研二上\leetcode\leetcode_easy\README\image\image-20220109204710773.png)
 
-![image-20220109205627493](E:\研二上\leetcode\README\image\image-20220109205627493.png)
+![image-20220109205627493](E:\研二上\leetcode\leetcode_easy\README\image\image-20220109205627493.png)
 
 #### 模板化二分法**
 
@@ -881,6 +879,73 @@ public:
         while(n && ++digits[--n] == 10) digits[n] = 0;
         if(digits[0] == 0) digits.insert(begin(digits), 1);
         return digits;
+    }
+};
+```
+
+## [67. 二进制求和](https://leetcode-cn.com/problems/add-binary/)
+
+本题给出的二进制数字是字符串形式，不可以转化成 int 型，因为**可能溢出**
+
+#### self
+
+```
+class Solution {
+public:
+    string addBinary(string a, string b) {
+        int maxnum = max(a.length(), b.length());
+        while(a.length() < maxnum) a = '0'+a;
+        while(b.length() < maxnum) b = '0'+b;
+        for(int i = 0; i < maxnum; ++i)
+        {
+            a[i] = a[i] +b[i] - '0';
+        }
+        for(int i = maxnum-1; i >=0; --i)
+        {
+            if(a[i] == '2' || a[i] == '3')
+            {
+                a[i] -= 2;
+                if(i == 0) a = '1' + a;
+                else a[i-1] = a[i-1]  + 1;
+            }
+        }
+        return a;
+    }
+};
+```
+
+#### **
+
+```
+class Solution {
+public:
+    string addBinary(string a, string b) {
+        string s;
+        int i = a.size()-1, j = b.size()-1, c = 0;
+        while(i>=0 || j>=0 || c == 1)
+        {
+            c += (i >= 0? a[i--]-'0' : 0);
+            c += (j >= 0? b[j--]-'0' : 0);
+            s.push_back( (c % 2) + '0');
+            c /= 2; // c >>= 1 equal to c = c >> 1;
+        }
+        reverse(s.begin(), s.end());
+        return s;
+    }
+};
+```
+
+## [69. Sqrt(x)](https://leetcode-cn.com/problems/sqrtx/)
+
+#### e ln
+
+```
+class Solution {
+public:
+    int mySqrt(int x) {
+        if(x == 0) return x;
+        int ans = exp(0.5*log(x));
+        return ((long long)(ans + 1) * (ans + 1) <= x ? ans + 1 : ans);
     }
 };
 ```
