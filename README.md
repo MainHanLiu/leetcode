@@ -1,3 +1,5 @@
+# leetcode_easy
+
 ## [541. 反转字符串 II](https://leetcode-cn.com/problems/reverse-string-ii/)
 
 #### self
@@ -32,34 +34,6 @@ public:
 ```
 
 ## [1. 两数之和](https://leetcode-cn.com/problems/two-sum/)
-
-```
-给定一个整数数组 nums 和一个整数目标值 target，请你在该数组中找出 和为目标值 target  的那 两个 整数，并返回它们的数组下标。
-
-你可以假设每种输入只会对应一个答案。但是，数组中同一个元素在答案里不能重复出现。
-
-你可以按任意顺序返回答案。
-
- 
-
-示例 1：
-
-输入：nums = [2,7,11,15], target = 9
-输出：[0,1]
-解释：因为 nums[0] + nums[1] == 9 ，返回 [0, 1] 。
-示例 2：
-
-输入：nums = [3,2,4], target = 6
-输出：[1,2]
-示例 3：
-
-输入：nums = [3,3], target = 6
-输出：[0,1]
-
-来源：力扣（LeetCode）
-链接：https://leetcode-cn.com/problems/two-sum
-著作权归领扣网络所有。商业转载请联系官方授权，非商业转载请注明出处。
-```
 
 ```
 class Solution {
@@ -674,7 +648,7 @@ public:
             }
             if(needle[i] == needle[j])
             {
-                ++j;
+                ++j;//含义：若匹配失败则从j的下一位置重新匹配
             }
             next[i] = j;//next数组赋值 j已经被加过1所以直接赋值j
         }
@@ -2754,6 +2728,8 @@ public:
 
 #### 动态规划 构建位置信息矩阵
 
+![image-20220120115533888](E:\研二上\leetcode\leetcode_easy\README\image\image-20220120115533888.png)
+
 ```
 class Solution {
 public:
@@ -2916,7 +2892,7 @@ public:
 
 
 
-# ——————————————————————
+# ————————————————
 
 
 
@@ -3614,7 +3590,7 @@ public:
 
 
 
-# ——————————————————————
+# ————————————————
 
 ## [面试题 10.01. 合并排序的数组](https://leetcode-cn.com/problems/sorted-merge-lcci/)
 
@@ -3631,6 +3607,319 @@ public:
                 A[p3--] = B[p2--];
             }
         }
+    }
+};
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ————————————————
+
+# ————————————————
+
+# leetcode_medium
+
+## [2. 两数相加](https://leetcode-cn.com/problems/add-two-numbers/)
+
+```
+class Solution {
+public:
+    ListNode* addTwoNumbers(ListNode* l1, ListNode* l2) {
+        int carry = 0;
+        ListNode *Head = new ListNode();
+        ListNode *TmpNode = Head;
+        while (l1 && l2) {
+            int x = l1->val + l2->val + carry;
+            carry = x>9 ? 1 : 0;//由x/10改为该形式，执行速度变快
+            TmpNode->next = new ListNode(x%10);;
+            TmpNode = TmpNode->next;
+            l1 = l1->next;
+            l2 = l2->next;
+        }
+        while (l1) {
+            int x = l1->val + carry;
+            carry = x>9 ? 1 : 0;
+            TmpNode->next = new ListNode(x%10);;
+            TmpNode = TmpNode->next;
+            l1 = l1->next;
+        }
+        while (l2) {
+            int x = l2->val + carry;
+            carry = x>9 ? 1 : 0;
+            TmpNode->next = new ListNode(x%10);;
+            TmpNode = TmpNode->next;
+            l2 = l2->next;
+        }
+        if (carry) TmpNode->next = new ListNode(1);
+        return Head->next;
+    }
+};
+```
+
+#### 精简版 执行时间更长
+
+```
+class Solution {
+public:
+    ListNode* addTwoNumbers(ListNode* l1, ListNode* l2) {
+        int carry = 0;
+        ListNode *Head = new ListNode();
+        ListNode *TmpNode = Head;
+        while (l1 || l2) {
+            int n1 = (l1 ? l1->val : 0);
+            int n2 = (l2 ? l2->val : 0);
+            int x = n1 + n2 + carry;
+            carry = x>9 ? 1 : 0;
+            TmpNode->next = new ListNode(x%10);;
+            TmpNode = TmpNode->next;
+            if (l1) l1 = l1->next;
+            if (l2) l2 = l2->next;
+        }
+        if (carry) TmpNode->next = new ListNode(1);
+        return Head->next;
+    }
+};
+```
+
+
+
+## [3. 无重复字符的最长子串](https://leetcode-cn.com/problems/longest-substring-without-repeating-characters/)
+
+#### 滑动窗口 索引跳转
+
+若end指向新元素，则插入hashmap。
+
+若指向旧元素。判断是否在窗口内，若在窗口内，跳转start至该字符的下一位置。更新旧元素索引。
+
+移动end并更新最大长度
+
+```
+class Solution {
+public:
+    int lengthOfLongestSubstring(string s) {
+        int sz = s.size(), start = 0, end = 0;
+        unordered_map<char,int> HashMap;
+        int res = 0;
+        while (end < sz) {
+            auto iter = HashMap.find(s[end]);
+            if (iter != HashMap.cend()) {
+                // finded
+                if (iter->second >= start) {//in window :jump start
+                    start = HashMap[s[end]] + 1;
+                }
+                // front window : add length and update index
+                HashMap[s[end]] = end; 
+            }
+            else {
+                //not find
+                HashMap.insert({s[end], end});
+            }
+            ++end;
+            res = max(res, end-start);
+        }
+        return res;
+    }
+};
+```
+
+##### 优化版**
+
+```
+class Solution {
+public:
+    int lengthOfLongestSubstring(string s) {
+        int sz = s.size(), start = 0, end = 0;
+        unordered_map<char,int> HashMap;
+        int res = 0;
+        while (end < sz) {
+            auto iter = HashMap.find(s[end]);
+            if (iter != HashMap.cend() && iter->second >= start) {
+                    start = HashMap[s[end]] + 1;
+                }
+            HashMap[s[end]] = end;//直接下标操作，包含插入和更新
+            ++end;
+            res = max(res, end-start);
+        }
+        return res;
+    }
+};
+```
+
+
+
+#### 滑动窗口 循环移动start删除重复元素
+
+```
+class Solution {
+public:
+    int lengthOfLongestSubstring(string s) {
+        int sz = s.size();
+        unordered_set<char> HashSet;
+        int res = 0;
+        for (int start = 0, end = 0; end < sz; ++end) {
+            while (HashSet.find(s[end]) != HashSet.end()) {
+                //持续移动左侧窗口直至不存在重复元素
+                HashSet.erase(s[start++]);
+            }
+            HashSet.insert(s[end]);
+            res = max(res, end-start+1);
+        }
+        return res;
+    }
+};
+```
+
+## [7. 整数反转](https://leetcode-cn.com/problems/reverse-integer/)
+
+## 溢出问题如何判断？
+
+```
+class Solution {
+public:
+    int reverse(int x) {
+        int res = 0;
+        while (x) {
+            if (res < INT_MIN / 10 || res > INT_MAX / 10) {
+                return 0;
+            }
+            res = res*10 + x%10;
+            x /= 10;
+        }
+        return res;
+    }
+};
+```
+
+## [15. 三数之和](https://leetcode-cn.com/problems/3sum/)
+
+#### 排序后遍历+首尾指针
+
+```
+class Solution {
+public:
+    vector<vector<int>> threeSum(vector<int>& nums) {
+        if (nums.size() < 3) return {};
+        sort(nums.begin(), nums.end());
+        vector<vector<int>> res;
+        int sz = nums.size();
+        for (int i=0; i<sz-2 && nums[i]<=0; ++i) {
+            if (i>0 && nums[i]==nums[i-1]) continue;//不能用[i]==[i+1]来跳过，会漏掉第一次判断
+            int left = i+1, right = sz-1;
+            while (left < right) {
+                long sum = nums[i]+nums[left]+nums[right];//考虑溢出
+                if (sum < 0) ++left;
+                else if (sum > 0) --right;
+                else {
+                    res.push_back({nums[i],nums[left],nums[right]});
+                    while (left<right &&nums[left] == nums[left+1]) ++left;//注意边界判断
+                    while (left<right &&nums[right] == nums[right-1]) --right;
+                    ++left,--right;
+                }
+            }
+        }
+        return res;
+    }
+};
+```
+
+
+
+## [19. 删除链表的倒数第 N 个结点](https://leetcode-cn.com/problems/remove-nth-node-from-end-of-list/)
+
+#### 快慢指针
+
+需要考虑删除的是否是头节点
+
+先移动n 判断 再移动1
+
+```
+class Solution {
+public:
+    ListNode* removeNthFromEnd(ListNode* head, int n) {
+        ListNode *slow = head, *fast = head;
+        for (int i=0; i<n; ++i) {
+            fast = fast->next;
+        }
+        if (fast) {
+            fast = fast->next;
+            while (fast) {
+                slow = slow->next;
+                fast = fast->next;
+            }
+            slow->next = slow->next->next;
+        }
+        else {
+            return head->next;
+        }
+        return head;
+    }
+};
+```
+
+#### 快慢指针优化：哑节点
+
+在对链表进行操作时，一种常用的技巧是添加一个哑节点（dummy node），它的next 指针指向链表的头节点。这样一来，我们就不需要对头节点进行特殊的判断了。
+
+```
+class Solution {
+public:
+    ListNode* removeNthFromEnd(ListNode* head, int n) {
+        ListNode *dummyHead = new ListNode(0,head);
+        ListNode *slow = dummyHead, *fast = dummyHead;
+        for (int i=0; i<=n; ++i) {
+            fast = fast->next;
+        }
+        while (fast) {
+            slow = slow->next;
+            fast = fast->next;
+        }
+        slow->next = slow->next->next;
+        return dummyHead->next;
+    }
+};
+```
+
+特别地，在某些语言中，由于需要自行对内存进行管理。因此在实际的面试中，对于「是否需要释放被删除节点对应的空间」这一问题，我们需要和面试官进行积极的沟通以达成一致。下面的代码中默认不释放空间。
+
+## [34. 在排序数组中查找元素的第一个和最后一个位置](https://leetcode-cn.com/problems/find-first-and-last-position-of-element-in-sorted-array/)
+
+#### 二分法
+
+```
+class Solution {
+public:
+    vector<int> searchRange(vector<int>& nums, int target) {
+        int sz = nums.size();
+        if (!sz) return {-1,-1};
+        if (nums[0] > target || nums[sz-1] < target) return {-1,-1};
+        int left = -1, mid, right = sz;
+        while (left +1 != right) {
+            mid = left + ((right-left)>>1);
+            if (nums[mid] < target) left = mid;
+            else right = mid;
+        }
+        if (nums[right] != target) return {-1,-1};
+        vector<int> res;
+        res.emplace_back(right);
+        left = -1;
+        right = sz;
+        while (left +1 != right) {
+            mid = left + ((right-left)>>1);
+            if (nums[mid] <= target) left = mid;
+            else right = mid;
+        }
+        res.emplace_back(left);
+        return res;
     }
 };
 ```
