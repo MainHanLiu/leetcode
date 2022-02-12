@@ -1890,7 +1890,6 @@ public:
         postorder(root->left,res);
         postorder(root->right,res);
         res.emplace_back(root->val);
-
     }
 };
 ```
@@ -2251,6 +2250,76 @@ public:
 };
 ```
 
+## [175. 组合两个表](https://leetcode-cn.com/problems/combine-two-tables/)
+
+#### mysql
+
+```
+# Write your MySQL query statement below
+select FirstName, LastName, City, State
+from Person left join Address
+on Person.PersonId = Address.PersonId;
+```
+
+
+
+## [202. 快乐数](https://leetcode-cn.com/problems/happy-number/)
+
+#### 快慢指针
+
+```
+class Solution {
+public:
+    bool isHappy(int n) {
+        int slow = n, fast = n;
+        do {
+            slow = helper(slow);
+            fast = helper(fast);
+            fast = helper(fast);
+        } while (slow != fast && fast!=1);
+        return fast==1;
+    }
+
+    int helper(int n) {
+        int next = 0;
+        while (n) {
+            next += pow(n%10, 2);
+            n /= 10;
+        }
+        return next;
+    }
+};
+```
+
+
+
+#### AC??? 离谱
+
+执行用时：0 ms, 在所有 C++ 提交中击败了100.00%的用户
+
+内存消耗：5.8 MB, 在所有 C++ 提交中击败了87.33%的用户
+
+```
+class Solution {
+public:
+    bool isHappy(int n) {
+        int times = 100;
+        while (times--) {
+            int next = 0;
+            while (n) {
+                next += pow(n%10, 2);
+                n /= 10;
+            }
+            if ( next == 1) return true;
+            else n = next;
+        }
+        return false;
+    }
+};
+```
+
+
+
 ## [203. 移除链表元素](https://leetcode-cn.com/problems/remove-linked-list-elements/)
 
 ##### 内存delete？
@@ -2438,9 +2507,9 @@ public:
 };
 ```
 
-#### 单队列实现
+#### 单队列实现**
 
-入栈操作时，首先获得入栈前的元素个数 n*n*，然后将元素入队到队列，再将队列中的前 n*n* 个元素（即除了新入栈的元素之外的全部元素）依次出队并入队到队列
+入栈操作时，首先获得入栈前的元素个数 n，然后将元素入队到队列，再将队列中的前 n个元素（即除了新入栈的元素之外的全部元素）依次出队并入队到队列
 
 ```
 class MyStack {
@@ -2489,6 +2558,125 @@ public:
         root->right = invertTree(root->left);
         root->left = invertTree(TmpTreeNode);
         return root;
+    }
+};
+```
+
+## [231. 2 的幂](https://leetcode-cn.com/problems/power-of-two/)
+
+#### 2的幂的二进制表示 只有一位1比特数
+
+```
+class Solution {
+public:
+    bool isPowerOfTwo(int n) {
+        return n>0 && !(n & (n-1));
+    }
+};
+```
+
+
+
+#### 除2 结果出现除了1的奇数 肯定不是2的幂
+
+```
+class Solution {
+public:
+    bool isPowerOfTwo(int n) {
+        if (n <= 0) return false;
+        while (n != 1) {
+            if (n&1) return false;
+            n >>= 1;
+        }
+        return true;
+    }
+};
+```
+
+
+
+## [232. 用栈实现队列](https://leetcode-cn.com/problems/implement-queue-using-stacks/)
+
+#### 一个栈负责push，另一个负责pop
+
+当负责pop的栈为空时 才将push栈内元素倒入pop栈内
+
+```
+class MyQueue {
+public:
+    stack<int> pushStk, popStk;
+    MyQueue() {
+        
+    }
+    
+    void push(int x) {
+        pushStk.push(x);
+        if (popStk.empty()) {
+            while (!pushStk.empty()) {
+                popStk.push(pushStk.top());
+                pushStk.pop();
+            }
+        }
+    }
+    
+    int pop() {
+        int res = popStk.top();
+        popStk.pop();
+        if (popStk.empty()) {
+            while (!pushStk.empty()) {
+                popStk.push(pushStk.top());
+                pushStk.pop();
+            }
+        }
+        return res;
+    }
+    
+    int peek() {
+        return popStk.top();
+    }
+    
+    bool empty() {
+        return popStk.empty();
+    }
+};
+```
+
+
+
+#### self(有冗余操作)
+
+```
+class MyQueue {
+public:
+    stack<int> MainStk, AuxStk;
+    MyQueue() {
+
+    }
+    
+    void push(int x) {
+        while (!MainStk.empty()) {
+            AuxStk.push(MainStk.top());
+            MainStk.pop();
+        }
+        MainStk.push(x);
+        while (!AuxStk.empty()) {
+            MainStk.push(AuxStk.top());
+            AuxStk.pop();
+        }
+    }
+    
+    int pop() {
+        int res = MainStk.top();
+        MainStk.pop();
+        return res;
+    }
+    
+    int peek() {
+        return MainStk.top();
+    }
+    
+    bool empty() {
+        return MainStk.empty();
     }
 };
 ```
@@ -2579,6 +2767,103 @@ public:
 
 维护一个长度为 2626 的频次数组 table，先遍历记录字符串 s 中字符出现的频次，然后遍历字符串 t，减去table 中对应的频次，如果出现 table[i]<0，则说明 t 包含一个不在 s 中的额外字符，返回false 即可
 
+## [268. 丢失的数字](https://leetcode-cn.com/problems/missing-number/)
+
+#### 位运算（比求和相减法更快）
+
+添加[0, n]的数一起异或运算，则等价于res出现了一次，其他数出现两次
+
+```
+class Solution {
+public:
+    int missingNumber(vector<int>& nums) {
+        int res = 0;
+        for (const auto &num : nums) res ^= num;
+        int other = nums.size();
+        while (other) res ^= other--;
+        return res;
+    }
+};
+```
+
+#### 等差求和相减
+
+```
+class Solution {
+public:
+    int missingNumber(vector<int>& nums) {
+        int sz = nums.size();
+        int sum = sz*(sz+1)/2;
+        for (const auto &num : nums) {
+            sum -= num;
+        }
+        return sum;
+    }
+};
+```
+
+#### 其他解法
+
+排序+遍历
+
+构建hashset后遍历find
+
+## [278. 第一个错误的版本](https://leetcode-cn.com/problems/first-bad-version/)
+
+#### 二分法
+
+##### 边界返回确定：
+
+​                                       true                                                 false
+
+(1)     起始          left/right   mid
+
+​		移动后(if)            right     												left
+
+
+
+​                                       true                                                 false
+
+(2)     起始          															left/right   mid
+
+​		移动后(else)          right     											left
+
+```
+class Solution {
+public:
+    int firstBadVersion(int n) {
+        int left = 0, right = n-1, mid = 0;
+        while (left <= right) {
+            mid = left + ((right-left) >> 1);
+            if (!isBadVersion(mid+1)) left = mid + 1;
+            else right = mid - 1;
+        }
+        return left+1;//return right+2;
+    }
+};
+```
+
+模板二分法出错，当输入 n = 2147483647 ，如果mid为int，会在第一次计算mid溢出
+
+解决：int提升为long
+
+```
+class Solution {
+public:
+    int firstBadVersion(int n) {
+        int left = -1, right = n, mid = 0;
+        while (left+1 != right) {
+            mid = left + ((right-left) >> 1);
+            if (!isBadVersion(mid+1)) left = mid;
+            else right = mid;
+        }
+        return right+1;
+    }
+};
+```
+
+
+
 ## [283. 移动零](https://leetcode-cn.com/problems/move-zeroes/)
 
 #### self
@@ -2650,9 +2935,106 @@ public:
 };
 ```
 
+## [338. 比特位计数](https://leetcode-cn.com/problems/counting-bits/)
+
+#### 根据奇偶遍历
+
+```
+对于所有的数字，只有两类：
+
+奇数：二进制表示中，奇数一定比前面那个偶数多一个 1，因为多的就是最低位的 1。
+          举例： 
+         0 = 0       1 = 1
+         2 = 10      3 = 11
+偶数：二进制表示中，偶数中 1 的个数一定和除以 2 之后的那个数一样多。因为最低位是 0，除以 2 就是右移一位，也就是把那个 0 抹掉而已，所以 1 的个数是不变的。
+           举例：
+          2 = 10       4 = 100       8 = 1000
+          3 = 11       6 = 110       12 = 1100
+```
+
+```
+class Solution {
+public:
+    vector<int> countBits(int n) {
+        vector<int> res(n+1, 0);
+        for (int i = 0; i <= n; ++i) {
+            if (i%2) res[i] = res[i-1] + 1;
+            else res[i] = res[i>>1];
+        }
+        return res;
+    }
+};
+```
+
+#### Brian Kernighan 算法
+
+利用Brian Kernighan 算法，可以在一定程度上进一步提升计算速度。Brian Kernighan 算法的原理是：对于任意整数 x，令x=x & (x−1)，该运算将 x 的二进制表示的最后一个 1 变成 0。因此，对 x 重复该操作，直到 x 变成 0，则操作次数即为 x 的「一比特数」。
+
+```
+class Solution {
+public:
+    vector<int> countBits(int n) {
+        vector<int> res(n+1, 0);
+        for (int i = 0, j; i <= n; ++i) {
+            j = i;
+            while (j) {
+                j = j & (j-1);
+                ++res[i];
+            }
+        }
+        return res;
+    }
+};
+```
+
+#### self 遍历计数
+
+```
+class Solution {
+public:
+    vector<int> countBits(int n) {
+        vector<int> res(n+1, 0);
+        for (int i = 0, j; i <= n; ++i) {
+            j = i;
+            while (j) {
+                if (j & 1) ++res[i];
+                j >>= 1;
+            }
+        }
+        return res;
+    }
+};
+```
+
+
+
 ## [349. 两个数组的交集](https://leetcode-cn.com/problems/intersection-of-two-arrays/)
 
 #### hashset
+
+精简：
+
+```
+class Solution {
+public:
+    vector<int> intersection(vector<int>& nums1, vector<int>& nums2) {
+        //将较短的nums存入哈希集并遍历较长的nums可以降低空间复杂度
+        if (nums1.size() > nums2.size()) return intersection(nums2,nums1);
+        unordered_set<int> HashSet_nums1{nums1.begin(), nums1.end()};
+        vector<int> res;
+        for (const int num : nums2) {
+            auto ret = HashSet_nums1.find(num);
+            if (ret != HashSet_nums1.cend()) {
+                res.emplace_back(num);
+                HashSet_nums1.erase(num);
+            }
+        }
+        return res;
+    }
+};
+```
+
+旧版：
 
 ```
 class Solution {
@@ -2680,6 +3062,103 @@ public:
 #### 排序后双指针 可以降低空间复杂度
 
 初始时，两个指针分别指向两个数组的头部。每次比较两个指针指向的两个数组中的数字，如果两个数字不相等，则将指向较小数字的指针右移一位，如果两个数字相等，且该数字不等于pre ，将该数字添加到答案并更新 pre 变量，同时将两个指针都右移一位。当至少有一个指针超出数组范围时，遍历结束。
+
+## [350. 两个数组的交集 II](https://leetcode-cn.com/problems/intersection-of-two-arrays-ii/)
+
+若某一个数组过大超过内存限制则无法对其排序，此时应该使用hashset
+
+#### hashset
+
+```
+class Solution {
+public:
+    vector<int> intersect(vector<int>& nums1, vector<int>& nums2) {
+        if (nums1.size() > nums2.size()) return intersect(nums2,nums1);
+        unordered_map<int,int> HashMap;
+        for (const auto &num : nums1) ++HashMap[num];
+        vector<int> res;
+        for (const auto &num : nums2) {
+            if (HashMap.count(num)) {
+                res.emplace_back(num);
+                --HashMap[num];
+                if (!HashMap[num]) HashMap.erase(num);
+            }
+        }
+        return res;
+    }
+};
+```
+
+#### 排序双指针
+
+```
+class Solution {
+public:
+    vector<int> intersect(vector<int>& nums1, vector<int>& nums2) {
+        vector<int> res;
+        sort(nums1.begin(), nums1.end());
+        sort(nums2.begin(), nums2.end());
+        int i = 0, j = 0;
+        while (i < nums1.size() && j < nums2.size()) {
+            if (nums1[i] == nums2[j]) {
+                res.emplace_back(nums1[i]);
+                ++i,++j;
+            }else if (nums1[i] < nums2[j]) {
+                ++i;
+            }else {
+                ++j;
+            }
+        }
+        return res;
+    }
+};
+```
+
+
+
+## [387. 字符串中的第一个唯一字符](https://leetcode-cn.com/problems/first-unique-character-in-a-string/)
+
+#### 构建vectormap
+
+```
+class Solution {
+public:
+    int firstUniqChar(string s) {
+        vector<int> recdMap(26, -1);
+        for (int i = 0; i < s.size(); ++i) {
+            if (recdMap[s[i]-'a'] >= 0) recdMap[s[i]-'a'] = INT_MAX;
+            else recdMap[s[i]-'a'] = i;
+        }
+        int res = INT_MAX;
+        for (const auto &x : recdMap) {
+            if (x >= 0) res = min(res, x);
+        }
+        return res == INT_MAX ? -1 : res;
+    }
+};
+```
+
+#### hashmap 记录索引
+
+```
+class Solution {
+public:
+    int firstUniqChar(string s) {
+        unordered_map<char,int> HashMap;
+        for (int i = 0; i < s.size(); ++i) {
+            if (HashMap.count(s[i])) HashMap[s[i]] = INT_MAX;
+            else HashMap[s[i]] = i;
+        }
+        int res = INT_MAX;
+        for (const auto &pa : HashMap) {
+            res = min(res, pa.second);
+        }
+        return res == INT_MAX ? -1 : res;
+    }
+};
+```
+
+
 
 ## [392. 判断子序列](https://leetcode-cn.com/problems/is-subsequence/)
 
@@ -2754,11 +3233,236 @@ public:
 };
 ```
 
+## [409. 最长回文串](https://leetcode-cn.com/problems/longest-palindrome/)
+
+每两个相同的字母可以使长度+2，除了相同的以外最多拥有一个单独的字母
+
+hashmap 凑成偶数则len+2,erase,最后遍历map
+
+#### 精简优化版：不使用hashmap
+
+```
+class Solution {
+public:
+    int longestPalindrome(string s) {
+        vector<int> recdMap(52);
+        for (const auto &ch : s) {
+            if (ch < 'a')  ++recdMap[ch-'A'];
+            else ++recdMap[ch-'a'+26];
+        }
+        int len = 0;
+        for (const auto &x : recdMap) {
+            if (len&1 && x&1) len += x-1; //process odd
+            else len += x;
+        }
+        return len;
+    }
+};
+```
+
+
+
+#### 精简版：
+
+```
+class Solution {
+public:
+    int longestPalindrome(string s) {
+        unordered_map<char, int> HashMap;
+        for (const auto &ch : s) ++HashMap[ch];
+        int len = 0;
+        for (const auto &pa : HashMap) {
+            if (len&1 && pa.second&1) len += pa.second-1;
+            else len += pa.second;
+        }
+        return len;
+    }
+};
+```
+
+#### self(count和erase有些冗余)
+
+```
+class Solution {
+public:
+    int longestPalindrome(string s) {
+        int len = 0;
+        unordered_map<char, int> HashMap;
+        for (const auto &ch : s) {
+            if (!HashMap.count(ch)) {
+                ++HashMap[ch];
+            } else {
+                len += 2;
+                HashMap.erase(ch);
+            }
+        }
+        if (HashMap.cbegin() != HashMap.cend()) ++len;
+        return len;
+    }
+};
+```
+
+## [455. 分发饼干](https://leetcode-cn.com/problems/assign-cookies/)
+
+数组无序
+
+#### 排序后双指针 贪心
+
+```
+class Solution {
+public:
+    int findContentChildren(vector<int>& g, vector<int>& s) {
+        sort(g.begin(), g.end());
+        sort(s.begin(), s.end());
+        int gIndex = 0, sIndex = 0, gSz = g.size(), sSz = s.size(), res = 0;
+        while (gIndex < gSz && sIndex < sSz) {
+            while (sIndex < sSz && g[gIndex] > s[sIndex]) ++sIndex;
+            if (sIndex++ < sSz) ++res;
+            ++gIndex;
+        }
+        return res;
+    }
+};
+```
+
+
+
+## [461. 汉明距离](https://leetcode-cn.com/problems/hamming-distance/)
+
+#### 异或后计算1比特数
+
+```
+class Solution {
+public:
+    int hammingDistance(int x, int y) {
+        x ^= y;
+        int res = 0;
+        while (x) {
+            x = x & (x-1);
+            ++res;
+        }
+        return res;
+    }
+};
+```
+
+
+
+## [496. 下一个更大元素 I](https://leetcode-cn.com/problems/next-greater-element-i/)
+
+#### 逆序建立hashmap 通过hashmap进行跳转查询每个元素的下一个更大元素
+
+```
+class Solution {
+public:
+    vector<int> nextGreaterElement(vector<int>& nums1, vector<int>& nums2) {
+        if (nums1.empty()) return {};
+        unordered_map<int,int> HashMap;
+        HashMap[nums2[nums2.size()-1]] = -1;
+        for (int i = nums2.size()-2; i >= 0; --i) {
+            if (nums2[i] < nums2[i+1]) HashMap[nums2[i]] = nums2[i+1];
+            else {
+                int tmp = nums2[i+1];
+                while (HashMap[tmp] != -1 && HashMap[tmp] < nums2[i]) tmp = HashMap[tmp];
+                HashMap[nums2[i]] = HashMap[tmp];
+            }
+        }
+        vector<int> res;
+        for (const auto &num : nums1) res.emplace_back(HashMap[num]);
+        return res;
+    }
+};
+```
+
+#### 单调栈+hashmap
+
+```
+class Solution {
+public:
+    vector<int> nextGreaterElement(vector<int>& nums1, vector<int>& nums2) {
+        unordered_map<int,int> HashMap;
+        stack<int> monoStk;//单调栈
+        for (int i = nums2.size()-1; i >= 0; --i) {
+            int num = nums2[i];
+            while (!monoStk.empty() && monoStk.top() < num) monoStk.pop();
+            HashMap[num] = monoStk.empty() ? -1 : monoStk.top();
+            monoStk.push(num);
+        }
+        vector<int> res;
+        for (const auto &num : nums1) res.emplace_back(HashMap[num]);
+        return res;
+    }
+};
+```
+
+
+
 ## [509. 斐波那契数](https://leetcode-cn.com/problems/fibonacci-number/)
 
 #### 剑指offer10 
 
 #### 滚动数组 矩阵快速幂
+
+## [557. 反转字符串中的单词 III](https://leetcode-cn.com/problems/reverse-words-in-a-string-iii/)
+
+#### 快慢指针
+
+```
+class Solution {
+public:
+    string reverseWords(string s) {
+        int slow = 0, fast = 0, tmpPtr, sz = s.size();
+        char tmpChar;
+        while (slow < sz) {
+            while (fast<sz && s[fast]!=' ') ++fast;//fast point to space
+            tmpPtr = fast-1;
+            while (slow < tmpPtr) {
+                tmpChar = s[slow];
+                s[slow++] = s[tmpPtr];
+                s[tmpPtr--] = tmpChar;
+            }
+            slow = ++fast;
+        }
+        return s;
+    }
+};
+```
+
+## [617. 合并二叉树](https://leetcode-cn.com/problems/merge-two-binary-trees/)
+
+#### 递归
+
+```
+class Solution {
+public:
+    TreeNode* mergeTrees(TreeNode* root1, TreeNode* root2) {
+        if (!root1) return root2;
+        if (!root2) return root1;
+        root1->val += root2->val;
+        root1->left = mergeTrees(root1->left, root2->left);
+        root1->right = mergeTrees(root1->right, root2->right);\
+        return root1;
+    }
+};
+```
+
+可以在原树上操作吗？如果必须要返回新的树 那如果一颗树为空时，返回的是原树，是否需要复制呢？
+
+```
+class Solution {
+public:
+    TreeNode* mergeTrees(TreeNode* root1, TreeNode* root2) {
+        if (!root1) return root2;
+        if (!root2) return root1;
+        TreeNode *newTree = new TreeNode(root1->val + root2->val);
+        newTree->left = mergeTrees(root1->left, root2->left);
+        newTree->right = mergeTrees(root1->right, root2->right);
+        return newTree;
+    }
+};
+```
+
+
 
 ## [704. 二分查找](https://leetcode-cn.com/problems/binary-search/)
 
@@ -2786,6 +3490,44 @@ public:
     }
 };
 ```
+
+## [746. 使用最小花费爬楼梯](https://leetcode-cn.com/problems/min-cost-climbing-stairs/)
+
+#### 动态规划**
+
+##### 滚动数组**
+
+```
+class Solution {
+public:
+    int minCostClimbingStairs(vector<int>& cost) {
+        int p = 0, q = 0, r = 0;
+        for (int i = 2; i <= cost.size(); ++i) {
+            r = min( (p+cost[i-2]), (q+cost[i-1]));
+            p = q;
+            q = r;
+        }
+        return r;
+    }
+};
+```
+
+##### 空间未优化
+
+```
+class Solution {
+public:
+    int minCostClimbingStairs(vector<int>& cost) {
+        vector<int> dp(cost.size()+1, 0);
+        for (int i = 2; i < dp.size(); ++i) {
+            dp[i] = min( (dp[i-1]+cost[i-1]), (dp[i-2]+cost[i-2]));
+        }
+        return dp[dp.size()-1];
+    }
+};
+```
+
+
 
 ## [876. 链表的中间结点](https://leetcode-cn.com/problems/middle-of-the-linked-list/)
 
@@ -2892,7 +3634,9 @@ public:
 
 
 
-# ————————————————
+
+
+# 剑指offer
 
 
 
@@ -3261,6 +4005,31 @@ public:
 
 ```
 
+## [剑指 Offer 10- II. 青蛙跳台阶问题](https://leetcode-cn.com/problems/qing-wa-tiao-tai-jie-wen-ti-lcof/)
+
+#### 动态规划 滚动数组
+
+dp[i] = dp[i-1] + dp[i-2]
+
+注意 dp[i] = dp[i-1] 1 + dp[i-2] + 1 是错误的，因为要求解有多少种跳法，不需要+1
+
+```
+class Solution {
+public:
+    int numWays(int n) {
+        int p = 0, q = 1, r = 1;
+        while (n--) {
+            r = (p+q) % 1000000007;
+            p = q;
+            q = r;
+        }
+        return r;
+    }
+};
+```
+
+
+
 ## [剑指 Offer 11. 旋转数组的最小数字](https://leetcode-cn.com/problems/xuan-zhuan-shu-zu-de-zui-xiao-shu-zi-lcof/)
 
 #### O(n)
@@ -3294,6 +4063,28 @@ public:
             else --right; 
         }
         return numbers[right];
+    }
+};
+```
+
+## [剑指 Offer 18. 删除链表的节点](https://leetcode-cn.com/problems/shan-chu-lian-biao-de-jie-dian-lcof/)
+
+dummyhead
+
+```
+class Solution {
+public:
+    ListNode* deleteNode(ListNode* head, int val) {
+        ListNode *dummyHead = new ListNode(0, head);
+        ListNode *tmpNode = dummyHead;
+        while (tmpNode->next) {
+            if (tmpNode->next->val == val) {
+                tmpNode->next = tmpNode->next->next;
+                break;
+            }
+            tmpNode = tmpNode->next;
+        }
+        return dummyHead->next;
     }
 };
 ```
@@ -3409,6 +4200,53 @@ public:
 };
 ```
 
+## [剑指 Offer 27. 二叉树的镜像](https://leetcode-cn.com/problems/er-cha-shu-de-jing-xiang-lcof/)
+
+#### 同226
+
+```
+class Solution {
+public:
+    TreeNode* mirrorTree(TreeNode* root) {
+        if (!root) return root;
+        TreeNode * tmpNode = root->left;
+        root->left = mirrorTree(root->right);
+        root->right = mirrorTree(tmpNode); 
+        return root;
+    }
+};
+```
+
+
+
+## [剑指 Offer 29. 顺时针打印矩阵](https://leetcode-cn.com/problems/shun-shi-zhen-da-yin-ju-zhen-lcof/)
+
+#### 四边界
+
+```
+class Solution {
+public:
+    vector<int> spiralOrder(vector<vector<int>>& matrix) {
+        if (matrix.empty()) return {};
+        int left = 0, right = matrix[0].size()-1, top = 0, bottom = matrix.size()-1;
+        vector<int> res;
+        while (true) {
+            for (int i = left; i <= right; ++i) res.emplace_back(matrix[top][i]);
+            if (++top > bottom) break;
+            for (int j = top; j <= bottom; ++j) res.emplace_back(matrix[j][right]);
+            if (--right < left) break;
+            for (int m = right; m >= left; --m) res.emplace_back(matrix[bottom][m]);
+            if (--bottom < top) break;
+            for (int n = bottom; n >= top; --n) res.emplace_back(matrix[n][left]);
+            if (++left > right) break;
+        }
+        return res;
+    }
+};
+```
+
+
+
 ## [剑指 Offer 40. 最小的k个数](https://leetcode-cn.com/problems/zui-xiao-de-kge-shu-lcof/)
 
 #### 排序后遍历
@@ -3451,6 +4289,87 @@ public:
             ++times;
         }
         return times;
+    }
+};
+```
+
+## [剑指 Offer 53 - II. 0～n-1中缺失的数字](https://leetcode-cn.com/problems/que-shi-de-shu-zi-lcof/)
+
+#### AC
+
+```
+class Solution {
+public:
+    int missingNumber(vector<int>& nums) {
+        int sz = nums.size();
+        int i = 0;
+        for (; i < sz; ++i) {
+            if (nums[i] != i) return i;
+        }
+    return i;
+    }
+};
+```
+
+#### 二分法
+
+模板法：
+
+```
+class Solution {
+public:
+    int missingNumber(vector<int>& nums) {
+        int left = -1, mid, right = nums.size();
+        while (left+1 != right) {
+            mid = left + ((right-left)>>1);
+            if (nums[mid] == mid) {
+                left = mid;
+            }
+            else {
+                right = mid;
+            }
+        }
+        return right;
+    }
+};
+```
+
+```
+class Solution {
+public:
+    int missingNumber(vector<int>& nums) {
+        int sz = nums.size();
+        int left = 0, mid, right = sz-1;
+        while (left <= right) {
+            mid = left + ((right-left)>>1);
+            if (nums[mid] != mid) {
+                right = mid - 1;
+            }
+            else {
+                left = mid + 1;
+            }
+        }
+        return right+1;
+    }
+};
+```
+
+```
+class Solution {
+public:
+    int missingNumber(vector<int>& nums) {
+        int sz = nums.size();
+        int left = 0, mid, right = sz-1;
+        while (left <= right) {
+            mid = left + ((right-left)>>1);
+            if (nums[mid] == mid) {
+                left = mid + 1;
+            }
+            else {
+                right = mid - 1;
+            }
+        }
+        return left;
     }
 };
 ```
@@ -3590,7 +4509,58 @@ public:
 
 
 
-# ————————————————
+### ————————————————
+
+# 面试题
+
+## [面试题 01.01. 判定字符是否唯一](https://leetcode-cn.com/problems/is-unique-lcci/)
+
+#### 位运算
+
+异或性质不符合本题
+
+ASCII码 0~127，使用两个long(64)来储存遍历结果，使用移位、与、或  运算
+
+```
+class Solution {
+public:
+    bool isUnique(string astr) {
+        long LowBit = 0, HighBit = 0;
+        for (const auto &ch : astr) {
+            if (ch >= 64) {
+                long IndexBit = 1L<<(ch-64);
+                if (IndexBit & HighBit) return false;
+                HighBit |= IndexBit;
+            }else {
+                long IndexBit = 1L<<(ch);
+                if (IndexBit & LowBit) return false;
+                LowBit |= IndexBit;
+            }
+        }
+        return true;
+    }
+};
+```
+
+
+
+#### hashset(不推荐)
+
+```
+class Solution {
+public:
+    bool isUnique(string astr) {
+        unordered_set<char> HashSet;
+        for (const char &ch : astr) {
+            auto ret = HashSet.insert(ch);
+            if (!ret.second) return false;
+        }
+        return true;
+    }
+};
+```
+
+
 
 ## [面试题 10.01. 合并排序的数组](https://leetcode-cn.com/problems/sorted-merge-lcci/)
 
@@ -3623,9 +4593,7 @@ public:
 
 
 
-# ————————————————
 
-# ————————————————
 
 # leetcode_medium
 
@@ -3779,9 +4747,43 @@ public:
 };
 ```
 
+## [5. 最长回文子串](https://leetcode-cn.com/problems/longest-palindromic-substring/)
+
+#### 中心扩散
+
+```
+class Solution {
+public:
+    string longestPalindrome(string s) {
+        int maxLen = 0, index = 0;
+        for (int i = 0; i < s.size(); ++i) {
+            auto odd = expandCenter(s, i, i);
+            auto even = expandCenter(s, i, i+1);
+            auto maxTmp = odd[1] > even[1] ? odd : even;
+            if (maxTmp[1] > maxLen) {
+                maxLen = maxTmp[1];
+                index = maxTmp[0];
+            }
+            if (maxLen > s.size()-i)
+        }
+        return s.substr(index, maxLen);
+    }
+
+    vector<int> expandCenter(string &s, int left, int right) {
+        while (left >= 0 && right < s.size()) {
+            if (s[left] == s[right]) --left,++right;
+            else break;
+        }
+        return {left+1, right-left-1};
+    }
+};
+```
+
+#### Manacher算法？
+
 ## [7. 整数反转](https://leetcode-cn.com/problems/reverse-integer/)
 
-## 溢出问题如何判断？
+#### 溢出问题判断是关键
 
 ```
 class Solution {
@@ -3799,6 +4801,83 @@ public:
     }
 };
 ```
+
+不能取绝对值后处理最后再加正负号，因为**-2147483648**取绝对值后超出int表示范围
+
+INT_MAX = 2147483647 
+
+```
+详细版
+if (res>214748364 || (res==214748364 && tmp>7)) return 0;
+if (res<-214748364 || (res==-214748364 && tmp<-8)) return 0;
+大部分越界数在第一个条件就会被排除，而满足了第二个条件前半部分的数一定不会满足第二个条件的后半部分，因为满足的数在反转前就已经超出INT_MAX，根本不会有这样的输入
+1/2 463847412 该数反转一定不溢出
+3/4... 463847412 原数已经无法用INT_MAX表示
+```
+
+没有必要比较反数的最后一位, 原数是int类型数，int最大值和最小值的最高位是2。如果一个原数与int类型数的最大值或最小值的长度相等，那么这个数的最高位数也只能为1或2，那么它对应反数的最后一位也只能为1或2。int最大值的最后一位数为7，1或2肯定小于7；int最小值的最后一位数为-8, -1,-2肯定大于-8
+
+## [11. 盛最多水的容器](https://leetcode-cn.com/problems/container-with-most-water/)
+
+#### AC超出时间
+
+```
+class Solution {
+public:
+    int maxArea(vector<int>& height) {
+        int res = 0;
+        for (int start=0; start<height.size(); ++start) {
+            for (int end=height.size()-1; start<end; --end) {
+                res = max(res,(end-start)*min(height[start],height[end]));
+            }
+        }
+        return res;
+    }
+};
+```
+
+#### 双指针，移动数字较小的指针
+
+在每个状态下，无论长板或短板向中间收窄一格，都会导致水槽 底边宽度 −1 变短：
+
+若向内 移动短板 ，水槽的短板min(h[i],h[j]) 可能变大，因此下个水槽的面积 可能增大 。
+若向内 移动长板 ，水槽的短板min(h[i],h[j]) 不变或变小，因此下个水槽的面积 一定变小 。
+因此，初始化双指针分列水槽左右两端，循环每轮将短板向内移动一格，并更新面积最大值，直到两指针相遇时跳出；即可获得最大面积。
+
+```
+class Solution {
+public:
+    int maxArea(vector<int>& height) {
+        int res = 0;
+        int start=0, end=height.size()-1;
+        while (start < end) {
+            res = max(res,(end-start)*min(height[start],height[end]));
+            if (height[start] < height[end]) ++start;
+            else --end;
+        }
+        return res;
+    }
+};
+```
+
+#### 优化代码
+
+```
+class Solution {
+public:
+    int maxArea(vector<int>& height) {
+        int start = 0, end = height.size()-1, res = 0;
+        while (start < end) {
+            res = height[start] < height[end] ?
+                  max(res, (end-start) * height[start++])://注意 start++必须放在乘法的第二位
+                  max(res, (end-start) * height[end--]);
+        }
+        return res;
+    }
+};
+```
+
+
 
 ## [15. 三数之和](https://leetcode-cn.com/problems/3sum/)
 
@@ -3830,6 +4909,70 @@ public:
         return res;
     }
 };
+```
+
+
+
+## [17. 电话号码的字母组合](https://leetcode-cn.com/problems/letter-combinations-of-a-phone-number/)
+
+#### 回溯
+
+```
+class Solution {
+private:
+    vector<string> res;
+    vector<string> StringMap{"","","abc","def","ghi","jkl","mno","pqrs","tuv","wxyz"};
+public:
+    vector<string> letterCombinations(string digits) {
+        if (digits.size() == 0) return {};
+        helper(digits, {}, 0);
+        return res;
+    }
+
+    void helper(const string &s, string path, int index) {
+        if (index == s.size()) {
+            res.push_back(path);//到达最深处的叶子节点
+            return;
+        }
+        string TmpStr = StringMap[s[index]-'0'];
+        for (int i = 0; i < TmpStr.size(); ++i) {
+            helper(s, path+TmpStr[i], index+1);
+        }
+    }
+};
+```
+
+![image-20220123141119522](E:\研二上\leetcode\README\image\image-20220123141119522.png)
+
+#### 队列
+
+```
+class Solution {
+private:
+    vector<string> res;
+    vector<string> StringMap{"","","abc","def","ghi","jkl","mno","pqrs","tuv","wxyz"};
+public:
+    vector<string> letterCombinations(string digits) {
+        if (digits.e()) return {};
+        queue<string> MainQue;
+        MainQue.push("");//init
+        string TmpStr;
+        for (int i = 0; i < digits.size(); ++i) {
+            while (MainQue.front().size() != i+1) {
+                TmpStr = StringMap[digits[i]-'0'];
+                for (auto ch : TmpStr) {
+                    MainQue.push(MainQue.front()+ch);
+                }
+                MainQue.pop();
+            }
+        }
+        while (!MainQue.empty()) {
+            res.emplace_back(MainQue.front());
+            MainQue.pop();
+        }
+        return res;
+    }
+};	
 ```
 
 
@@ -3891,6 +5034,125 @@ public:
 
 特别地，在某些语言中，由于需要自行对内存进行管理。因此在实际的面试中，对于「是否需要释放被删除节点对应的空间」这一问题，我们需要和面试官进行积极的沟通以达成一致。下面的代码中默认不释放空间。
 
+## [22. 括号生成](https://leetcode-cn.com/problems/generate-parentheses/)
+
+#### 动态规划
+
+```
+简单来说，在求N个括号的排列组合时，把第N种情况（也就是N个括号排列组合）视为单独拿一个括号E出来，剩下的N-1个括号分为两部分，P个括号和Q个括号，P+Q=N-1，然后这两部分分别处于括号E内和括号E的右边，各自进行括号的排列组合。由于我们是一步步计算得到N个括号的情况的，所以小于等于N-1个括号的排列组合方式我们是已知的（用合适的数据结构存储，方便后续调用，且在存储时可利用特定数据结构实现题目某些要求，如排序，去重等），且P+Q=N-1，P和Q是小于等于N-1的，所以我们能直接得到P个和Q个括号的情况，进而得到N个括号的结果
+```
+
+n 		dp[n]
+0 		 ""
+1 		()
+2 		(())    ()()
+
+当n为3
+
+排列组合 (dp[0]) + dp[2] 	 ()(())          ()()()
+
+​				 (dp[1]) + dp[1] 	 (())()
+
+​				 (dp[2]) + dp[0]	  ((()))         (()())
+
+```
+class Solution {
+public:
+    vector<string> generateParenthesis(int n) {
+        vector<vector<string>> dp(n+1);
+        dp[0] = {""};
+        dp[1] = {"()"};
+        for (int i = 2; i <= n; ++i) {
+            string TmpStr;
+            for (int m = 0; m < i; ++m) {
+                for (auto str1 : dp[m]) {
+                    for (auto str2 : dp[i-1-m]) {
+                        TmpStr = "(" + str1 + ")" + str2;
+                        dp[i].emplace_back(TmpStr);
+                    }
+                }
+            }
+        }
+        return dp[n];
+    }
+};
+```
+
+
+
+## [33. 搜索旋转排序数组](https://leetcode-cn.com/problems/search-in-rotated-sorted-array/)
+
+#### 一次二分法**
+
+```
+将数组一分为二，其中一定有一个是有序的，另一个可能是有序，也能是部分有序。
+此时有序部分用二分法查找。无序部分再一分为二，其中一个一定有序，另一个可能有序，可能无序。就这样循环. 
+```
+
+```
+对于二分查找的题目，重点就是二分后如何舍弃一半。经典的二分查找算法中，由于单调递增性，通过比较mid元素和target就可以确认舍弃哪一半。这个题目中，由于rotation破坏了单调递增性，比较mid元素和target不足以确认该舍弃哪一半。关键点就在于单调递增性。如何获取单调递增性呢？通过比较mid元素和第一个元素就可以确认[0..mid]和[mid..n-1]哪一部分是具备单调递增性的，由此再和target比较来确认该舍弃哪一半。
+```
+
+```
+class Solution {
+public:
+    int search(vector<int>& nums, int target) {
+        int left = 0, mid, right = nums.size()-1;
+        while (left <= right) {
+            mid = left + ((right-left)>>1);
+            if (nums[mid] == target) return mid;
+            if (nums[mid] >= nums[0]) {
+                if (nums[0]<=target && target<nums[mid]) right = mid - 1;
+                else left = mid + 1;
+            }
+            else {
+                if (nums[mid]<target && target<=nums[right]) left = mid + 1;
+                else right = mid - 1;
+            }
+        }
+        return -1;
+    }
+};
+```
+
+#### 两次二分法
+
+```
+第一次寻找旋转点下标，第二次普通二分查找
+```
+
+```
+1.若旋转，则寻找旋转点下标并重新界定left和right 
+2. t>[0] 在左段 ； t <[0] 在右段
+```
+
+```
+class Solution {
+public:
+    int search(vector<int>& nums, int target) {
+        int left = 0, mid, right = nums.size()-1;
+        if (nums[left] > nums[right]) {
+            while (left < right) {
+                mid = left + ((right-left)>>1);
+                if (nums[mid] > nums[right]) left = mid + 1;
+                else  right = mid;
+            }//when quit, left = right
+            if (target >= nums[0]) right = --left, left = 0;
+            else right = nums.size()-1;
+        } 
+        while (left <= right) {
+            mid = left + ((right-left)>>1);
+            if (nums[mid] == target) return mid;
+            if (nums[mid] < target) left = mid + 1;
+            else  right = mid - 1;
+        }
+        return -1;
+    }
+};
+```
+
+
+
 ## [34. 在排序数组中查找元素的第一个和最后一个位置](https://leetcode-cn.com/problems/find-first-and-last-position-of-element-in-sorted-array/)
 
 #### 二分法
@@ -3920,6 +5182,680 @@ public:
         }
         res.emplace_back(left);
         return res;
+    }
+};
+```
+
+
+
+## [39. 组合总和](https://leetcode-cn.com/problems/combination-sum/)
+
+#### sort + 回溯
+
+产生重复的原因是：在每一个结点，做减法，展开分支的时候，由于题目中说 每一个元素可以重复使用，我们考虑了 所有的 候选数，因此出现了重复的列表。
+
+一种简单的去重方案是借助哈希表的天然去重的功能，但实际操作一下，就会发现并没有那么容易。
+
+可不可以在搜索的时候就去重呢？答案是可以的。遇到这一类相同元素不计算顺序的问题，我们在搜索的时候就需要 按某种顺序搜索。具体的做法是：每一次搜索的时候设置 下一轮搜索的起点 begin，请看下图。
+
+即：从每一层的第 2 个结点开始，都不能再搜索产生同一层结点已经使用过的 candidate 里的元素。
+
+```
+class Solution {
+public:
+    vector<vector<int>> res;
+    vector<int> path;
+    vector<vector<int>> combinationSum(vector<int>& candidates, int target) {
+        sort(candidates.begin(),candidates.end());
+        backtarck(candidates, 0, target);
+        return res;   
+    }
+
+    void backtarck(vector<int>& candidates, int begin, int target) {
+        if (target == 0) res.emplace_back(path);
+        else if (target < 0) return;
+        else {
+            for (int i = begin; i < candidates.size(); ++i ) {
+                path.emplace_back(candidates[i]);
+                backtarck(candidates, i, target-candidates[i]);
+                //注意此处从i开始，否则会有重复的不同排列的列表
+                path.pop_back();
+            }
+        } 
+    }
+};
+```
+
+
+
+## [46. 全排列](https://leetcode-cn.com/problems/permutations/)
+
+#### 回溯
+
+```
+class Solution {
+private:
+    vector<vector<int>> res;
+    vector<int> path;
+public:
+    vector<vector<int>> permute(vector<int>& nums) {
+        vector<bool> visited(nums.size(),false);
+        helper(nums, visited, 0);
+        return res;
+    }
+
+    void helper(const vector<int> &nums, vector<bool> &visited, int index) {
+        if (index == nums.size()) {
+            res.emplace_back(path);
+            return;
+        }
+        for (int i = 0; i < nums.size(); ++i) {
+            if (!visited[i]) {
+                path.emplace_back(nums[i]);
+                visited[i] = true;
+                helper(nums, visited, index+1);
+                path.pop_back();
+                visited[i] = false;
+            }
+        } 
+    }
+};
+```
+
+用hashmap空间占用却更小，为什么？
+
+```
+class Solution {
+public:
+    vector<vector<int>> res;
+    vector<int> path;
+    vector<vector<int>> permute(vector<int>& nums) {
+        unordered_map<int, bool> visited;
+        for (const auto &num :nums) visited.insert({num, false});
+        helper(nums, visited, 0);
+        return res;
+    }
+
+    void helper(const vector<int> &nums, unordered_map<int, bool> &visited, int index) {
+        if (index == nums.size()) {
+            res.emplace_back(path);
+            return;
+        }
+        for (const int &num : nums) {
+            if (!visited[num]) {
+                path.emplace_back(num);
+                visited[num] = true;
+                helper(nums, visited, index+1);
+                path.pop_back();
+                visited[num] = false;
+            }
+        } 
+    }
+};
+```
+
+
+
+## [48. 旋转图像](https://leetcode-cn.com/problems/rotate-image/)
+
+#### 上下翻转+对角线翻转
+
+```
+class Solution {
+public:
+    void rotate(vector<vector<int>>& matrix) {
+        int n = matrix.size();
+        for (int i = 0; i < n/2; ++i) {
+            for (int j = 0; j < n; ++j) {
+                swap(matrix[i][j], matrix[n-1-i][j]);
+            }
+        }
+        for (int i = 0; i < n; ++i) {
+            for (int j = 0; j < i; ++j) {
+                swap(matrix[i][j], matrix[j][i]);
+            }
+        }
+    }
+};
+```
+
+#### 翻转 向内收缩
+
+![image-20220212214812942](E:\研二上\leetcode\README\image\image-20220212214812942.png)
+
+```
+class Solution {
+public:
+    void rotate(vector<vector<int>>& matrix) {
+        int pos1 = 0, pos2 = matrix.size() - 1, add, tmp;
+        while (pos1 < pos2) {
+            add = 0;
+            while (add < pos2-pos1) {//when len is n, roop times is n-1
+                tmp = matrix[pos1][pos1+add];
+                matrix[pos1][pos1+add] = matrix[pos2-add][pos1];
+                matrix[pos2-add][pos1] = matrix[pos2][pos2-add];
+                matrix[pos2][pos2-add] = matrix[pos1+add][pos2];
+                matrix[pos1+add][pos2] = tmp;
+                ++add;
+            }
+            ++pos1,--pos2;
+        }
+    }
+};
+
+```
+
+
+
+## [55. 跳跃游戏](https://leetcode-cn.com/problems/jump-game/)
+
+```
+class Solution {
+public:
+    bool canJump(vector<int>& nums) {
+        int far = 0;
+        for (int i = 0; i < nums.size(); ++i) {
+            if (i > far) return false;
+            far = max(far, i + nums[i]);
+        }
+        return true;
+    }
+};
+```
+
+```
+class Solution {
+public:
+    bool canJump(vector<int>& nums) {
+        int far = 0;
+        for (int i = 0; i <= far; ++i) {        
+            far = max(far, i + nums[i]);
+            if (far >= nums.size()-1) return true;
+        }
+        return false;
+    }
+};
+
+```
+
+## [56. 合并区间](https://leetcode-cn.com/problems/merge-intervals/)
+
+#### 排序后处理
+
+```
+class Solution {
+public:
+    vector<vector<int>> merge(vector<vector<int>>& intervals) {
+        vector<vector<int>> res;
+        sort(intervals.begin(), intervals.end());
+        for (auto inter : intervals) {
+            if (!res.size() || res.back()[1] < inter[0]) {
+                res.push_back({inter[0], inter[1]});
+            } else {
+                res.back()[1] = max(inter[1], res.back()[1]);
+            }
+        }
+        return res;
+    }
+};
+```
+
+
+
+## [62. 不同路径](https://leetcode-cn.com/problems/unique-paths/)
+
+#### 动态规划(self)
+
+```
+转移方程
+dp[i][j] = dp[i-1][j] + dp[i][j-1];
+```
+
+```
+class Solution {
+public:
+    int uniquePaths(int m, int n) {
+        vector<vector<int>> dp(m,vector<int>(n,1));
+        for (int i = 1; i < m; ++i) {
+            for (int j = 1; j < n; ++j) {
+                dp[i][j] = dp[i-1][j] + dp[i][j-1];
+            }
+        }
+        return dp[m-1][n-1];
+    }
+};
+```
+
+#### 空间优化
+
+```
+class Solution {
+public:
+    int uniquePaths(int m, int n) {
+        if (m < n) swap(m, n);
+        vector<int> p(n,1);
+        vector<int> q(n,1);
+        for (int i = 1; i < m; ++i) {
+            q[0] = 1;
+            for (int j = 1; j < n; ++j) {
+                q[j] = p[j] + q[j-1];
+            }
+            p = q;
+        }
+        return q[n-1];
+    }
+};
+```
+
+```
+此外，由于我们交换行列的值并不会对答案产生影响，因此我们总可以通过交换m和n使得m≤n，这样空间复杂度降低至O(min(m,n))
+```
+
+#### 排列组合
+
+```
+从左上角到右下角的过程中，我们需要移动 m+n-2m+n−2 次，其中有 m-1m−1 次向下移动，n-1n−1 次向右移动。因此路径的总数，就等于从 m+n-2m+n−2 次移动中选择 m-1m−1 次向下移动的方案数
+```
+
+![image-20220210203454992](E:\研二上\leetcode\README\image\image-20220210203454992.png)
+
+```
+class Solution {
+public:
+    int uniquePaths(int m, int n) {
+        long long ans = 1;
+        for (int x = n, y = 1; y < m; ++x, ++y) {
+            ans = ans * x / y;
+        }
+        return ans;
+    }
+};
+```
+
+
+
+## [64. 最小路径和](https://leetcode-cn.com/problems/minimum-path-sum/)
+
+#### 动态规划
+
+注意p若初始化空间，应使用索引操作，而不能使用emplace或push，否则只会在末尾添加元素
+
+注意返回p[n-1]而不是q[n-1], 因为在m = 1 的情况下，不会进入q的赋值流程，只能返回初始值0
+
+```
+class Solution {
+public:
+    int minPathSum(vector<vector<int>>& grid) {
+        int m = grid.size(), n = grid[0].size();
+        vector<int> p(n,0), q(n,0);
+        for (int i = 0, tmp = 0; i < n; ++i) {
+            tmp += grid[0][i];
+            p[i] = tmp;
+        }
+        for (int i = 1; i < m; ++i) {
+            q[0] = p[0] + grid[i][0];
+            for (int j = 1; j < n; ++j) {
+                q[j] = min(q[j-1], p[j]) + grid[i][j];
+            }
+            p = q;
+        }
+        return p[n-1];
+    }
+};
+```
+
+
+
+## [75. 颜色分类](https://leetcode-cn.com/problems/sort-colors/)
+
+#### 快速排序
+
+```
+class Solution {
+public:
+    void sortColors(vector<int>& nums) {
+        quicksort(nums, 0, nums.size()-1);
+    }
+
+    void quicksort(vector<int>& nums, int left, int right) {
+        if (left>=right) return;
+        int index = partition(nums, left, right);
+        quicksort(nums, left, index-1);
+        quicksort(nums, index+1, right);
+    }
+
+    int partition(vector<int>& nums, int left, int right) {
+        int i = rand() % (right-left+1) +left;
+        swap(nums[left], nums[i]);
+        int resleft = left, tmp = nums[left];
+        while (left < right) {
+            while (left<right && nums[right]>=tmp) --right;
+            while (left<right && nums[left]<=tmp) ++left;
+            if (left < right) swap(nums[left], nums[right]);
+        }
+        swap(nums[resleft], nums[right]);
+        return right;
+    }
+};
+```
+
+
+
+## [78. 子集](https://leetcode-cn.com/problems/subsets/)
+
+#### 0-size遍历 每层遍历中调用回溯算法
+
+#### 动态规划+滑动vector
+
+```
+class Solution {
+public:
+    vector<vector<int>> subsets(vector<int>& nums) {
+        vector<vector<int>> res{{}}, tmpres = res;
+        for (auto &num : nums) {
+            for (auto &tmp : tmpres) {
+                tmp.emplace_back(num);
+                res.emplace_back(tmp);
+            }
+            tmpres = res;
+        }
+        return res;
+    }
+};
+```
+
+
+
+## [98. 验证二叉搜索树](https://leetcode-cn.com/problems/validate-binary-search-tree/)
+
+#### 递归
+
+```
+注意不能只比较root->left->val 小于 root->val 小于 root->right->val的关系
+
+左子树的所有节点都要满足小于root->val 
+```
+
+(self)
+
+```
+class Solution {
+public:
+    bool isValidBST(TreeNode* root) {
+        if (!root) return true;
+        if (root->left) {
+            TreeNode * tmpNode = root->left;
+            while (tmpNode->right) tmpNode = tmpNode->right;
+            if (tmpNode->val >= root->val) return false;
+        }
+        if (root->right) {
+            TreeNode * tmpNode = root->right;
+            while (tmpNode->left) tmpNode = tmpNode->left;
+            if (tmpNode->val <= root->val) return false;
+        }
+        return isValidBST(root->left) && isValidBST(root->right);
+    }
+};
+```
+
+有参数传递反而导致运行时间更长？
+
+```
+class Solution {
+public:
+    bool isValidBST(TreeNode* root) {
+        return helper(root, LONG_MIN, LONG_MAX);
+    }
+
+    bool helper(TreeNode* root, long lower, long upper) {
+        if (!root) return true;
+        if (root->val <= lower || root->val >= upper) return false;
+        return helper(root->left, lower, root->val) && helper(root->right, root->val, upper);
+    }
+};
+```
+
+#### 中序遍历
+
+## [102. 二叉树的层序遍历](https://leetcode-cn.com/problems/binary-tree-level-order-traversal/)
+
+#### 队列
+
+```
+class Solution {
+public:
+    vector<vector<int>> levelOrder(TreeNode* root) {
+        if (!root) return {};
+        vector<vector<int>> res;
+        queue<TreeNode*> AuxQue;
+        AuxQue.push(root);
+        while (!AuxQue.empty()) {
+            int n = AuxQue.size();
+            vector<int> TmpRes;
+            TreeNode *TmpNode;
+            while (n--) {
+                TmpNode = AuxQue.front();
+                TmpRes.emplace_back(TmpNode->val);
+                if (TmpNode->left) AuxQue.push(TmpNode->left);
+                if (TmpNode->right) AuxQue.push(TmpNode->right);
+                AuxQue.pop();
+            }
+            res.emplace_back(TmpRes);
+        }
+    return res;
+    }
+};
+```
+
+
+
+## [198. 打家劫舍](https://leetcode-cn.com/problems/house-robber/)
+
+#### 动态规划
+
+*dp*[*i*]=max(*dp*[*i*−2]+*nums*[*i*],*dp*[*i*−1])
+
+```
+class Solution {
+public:
+    int rob(vector<int>& nums) {
+        int sz = nums.size();
+        if (sz == 1) return nums[0];
+        if (sz == 2) return max(nums[0], nums[1]);
+        int p = nums[0], q = max(nums[0], nums[1]), r = 0;
+        for (int i = 2; i < sz; ++i) {
+            r = max(p+nums[i], q);
+            p = q;
+            q = r;
+        }
+        return r;
+    }
+};
+```
+
+
+
+## [200. 岛屿数量](https://leetcode-cn.com/problems/number-of-islands/)
+
+#### DFS
+
+```
+class Solution {
+public:
+    void dfs(vector<vector<char>>& grid, int r, int c) {
+        if (r<0 || c<0 || r>=grid.size() || c>=grid[0].size() || grid[r][c]!='1') return;
+        grid[r][c] = '2';
+        dfs(grid, r-1, c);
+        dfs(grid, r+1, c);
+        dfs(grid, r, c-1);
+        dfs(grid, r, c+1);
+    }
+
+    int numIslands(vector<vector<char>>& grid) {
+        int cnt = 0;
+        for (int i = 0; i < grid.size(); ++i) {
+            for (int j = 0; j < grid[0].size(); ++j) {
+                if (grid[i][j] == '1') dfs(grid, i, j),++cnt;;
+            }
+        }
+        return cnt;
+    }
+};
+```
+
+#### BFS？
+
+#### 并查集？
+
+## [215. 数组中的第K个最大元素](https://leetcode-cn.com/problems/kth-largest-element-in-an-array/)
+
+其实这道问题考察了「快速排序」的 partition 操作和数据结构「堆」的应用
+
+#### 快速排序思想
+
+```
+class Solution {
+public:
+    int quickSelect(vector<int>& nums, int left, int right, int target) {
+        while (true) { //无需递归调用quickSelect，避免调用开销
+            int index = randomPartition(nums, left, right);
+            if (index == target) {
+                return nums[index];
+            } else if (index < target){
+                left = index + 1;
+            } else {
+                right = index - 1;
+            }
+        }
+    }
+
+    int randomPartition(vector<int>& nums, int left, int right) {
+        int i = rand() % (right - left + 1) + left;
+        swap(nums[i], nums[left]);
+        int tmp = nums[left];
+        int resleft = left;
+        while (left < right) {
+            while (left<right && nums[right]>=tmp) --right;
+            while (left<right && nums[left]<=tmp) ++left;
+            if (left < right) swap(nums[left], nums[right]);
+        }
+        swap(nums[resleft], nums[right]);
+        return right;
+    }
+
+    int findKthLargest(vector<int>& nums, int k) {
+        srand(time(0));
+        return quickSelect(nums, 0, nums.size() - 1, nums.size() - k);
+    }
+};
+```
+
+#### 基于堆排序 ？
+
+## [300. 最长递增子序列](https://leetcode-cn.com/problems/longest-increasing-subsequence/)
+
+#### 动态规划 O(n*n)
+
+*dp*[*i*]=max(*dp*[*j*])+1,其中0≤*j*<*i*且*num*[*j*]<*num*[*i*]
+
+不能返回最后一个状态值，最后一个状态值只表示以 nums[size()-1]结尾的「上升子序列」的长度，状态数组dp 的最大值才是题目要求的结果。
+
+```
+class Solution {
+public:
+    int lengthOfLIS(vector<int>& nums) {
+        vector<int> dp(nums.size(), 1);
+        int res = 1;
+        for (int i = 1; i < nums.size(); ++i) {
+            int j = i;
+            while (j--) {
+                if (nums[j] < nums[i]) {
+                    dp[i] = max(dp[i], dp[j]+1);
+                    res = max (res, dp[i]);
+                }
+            }
+        }
+        return res;
+    }
+};
+```
+
+#### 动态规划+二分 O(nlogn)
+
+```
+
+```
+
+
+
+#### 索引-pair hash存储(x)错误
+
+```
+//无法通过[0,1,0,3,2,3]
+class Solution {
+public:
+    int lengthOfLIS(vector<int>& nums) {
+        unordered_map<int,pair<int,int>> HashMap; // nowindex - <maxlen,lastindex>
+        int res = 1;
+        HashMap.insert({0, {1, -1}});
+        for (int i = 1; i < nums.size(); ++i) {
+            if (nums[i-1] < nums[i]) {
+                HashMap.insert({i, {HashMap[i-1].first+1, i-1}});
+                res = max(res, HashMap[i].first);
+            } else {
+                int tmpIndex = HashMap[i-1].second;
+                while (tmpIndex != -1 && nums[tmpIndex] >= nums[i]) tmpIndex = HashMap[tmpIndex].second;
+                if (tmpIndex != -1 ) {
+                    HashMap.insert({i, {HashMap[tmpIndex].first+1, tmpIndex}});
+                    res = max(res, HashMap[i].first);
+                } else {
+                    HashMap.insert({i, {1, -1}});
+                }
+            }
+        }
+        return res;
+    }
+};
+```
+
+
+
+#### 
+
+
+
+# leetcode_hard
+
+## [23. 合并K个升序链表](https://leetcode-cn.com/problems/merge-k-sorted-lists/)
+
+#### 遍历插入链表(self)
+
+```
+class Solution {
+public:
+    ListNode* mergeKLists(vector<ListNode*>& lists) {
+        ListNode * newlist = nullptr;
+        for (auto oldlist : lists) {
+            newlist = merge2Lists(newlist, oldlist);
+        }
+        return newlist;
+    }
+
+    ListNode* merge2Lists(ListNode* &list1, ListNode* &list2) {
+        ListNode *dummyHead = new ListNode(0,list1);
+        ListNode *ptr1 = dummyHead, *ptr2 = list2;
+        while (ptr1->next && ptr2) {
+            if (ptr2->val <= ptr1->next->val) {
+                ListNode *tmp = ptr2->next;
+                ptr2->next = ptr1->next;
+                ptr1->next = ptr2;
+                ptr2 = tmp;
+            } else {
+                ptr1 = ptr1->next;
+            }
+        }
+        if (ptr2) ptr1->next = ptr2;
+        return dummyHead->next;
     }
 };
 ```
