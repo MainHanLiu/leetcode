@@ -702,9 +702,9 @@ https://www.bilibili.com/video/BV1d54y1q7k7?spm_id_from=333.999.0.0
 
 总结m∈[l+1,r-1]
 
-![image-20220109204710773](E:\研二上\leetcode\leetcode_easy\README\image\image-20220109204710773.png)
+![image-20220109204710773](README\image\image-20220109204710773.png)
 
-![image-20220109205627493](E:\研二上\leetcode\leetcode_easy\README\image\image-20220109205627493.png)
+![image-20220109205627493](README\image\image-20220109205627493.png)
 
 ```
 class Solution {
@@ -2427,7 +2427,7 @@ public:
 };
 ```
 
-![image-20220117114614310](E:\研二上\leetcode\leetcode_easy\README\image\image-20220117114614310.png)
+![image-20220117114614310](README\image\image-20220117114614310.png)
 
 ## [217. 存在重复元素](https://leetcode-cn.com/problems/contains-duplicate/)
 
@@ -3207,7 +3207,7 @@ public:
 
 #### 动态规划 构建位置信息矩阵
 
-![image-20220120115533888](E:\研二上\leetcode\leetcode_easy\README\image\image-20220120115533888.png)
+![image-20220120115533888](README\image\image-20220120115533888.png)
 
 ```
 class Solution {
@@ -4484,7 +4484,7 @@ public:
 };
 ```
 
-![image-20220118002133541](E:\研二上\leetcode\leetcode_easy\README\image\image-20220118002133541.png)
+![image-20220118002133541](README\image\image-20220118002133541.png)
 
 
 
@@ -4942,7 +4942,7 @@ public:
 };
 ```
 
-![image-20220123141119522](E:\研二上\leetcode\README\image\image-20220123141119522.png)
+![image-20220123141119522](README\image\image-20220123141119522.png)
 
 #### 队列
 
@@ -5321,7 +5321,7 @@ public:
 
 #### 翻转 向内收缩
 
-![image-20220212214812942](E:\研二上\leetcode\README\image\image-20220212214812942.png)
+![image-20220212214812942](README\image\image-20220212214812942.png)
 
 ```
 class Solution {
@@ -5457,7 +5457,7 @@ public:
 从左上角到右下角的过程中，我们需要移动 m+n-2m+n−2 次，其中有 m-1m−1 次向下移动，n-1n−1 次向右移动。因此路径的总数，就等于从 m+n-2m+n−2 次移动中选择 m-1m−1 次向下移动的方案数
 ```
 
-![image-20220210203454992](E:\研二上\leetcode\README\image\image-20220210203454992.png)
+![image-20220210203454992](README\image\image-20220210203454992.png)
 
 ```
 class Solution {
@@ -5649,6 +5649,61 @@ public:
 
 
 
+## [142. 环形链表 II](https://leetcode-cn.com/problems/linked-list-cycle-ii/)
+
+#### hashset
+
+```
+class Solution {
+public:
+    ListNode *detectCycle(ListNode *head) {
+        unordered_set<ListNode*> HashSet;
+        while (head) {
+            if (!HashSet.count(head)) HashSet.insert(head);
+            else return head;
+            head = head->next;
+        }
+        return nullptr;
+    }
+};
+```
+
+#### 快慢指针
+
+```
+如下图所示，设链表中环外部分的长度为 a。slow 指针进入环后，又走了b的距离与fast相遇。此时，fast 指针已经走完了环的n圈，因此它走过的总距离为a+n(b+c)+b=a+(n+1)b+nc。
+根据题意，任意时刻，fast 指针走过的距离都为slow 指针的2倍。因此，我们有
+a+(n+1)b+nc=2(a+b)⟹a=c+(n−1)(b+c)
+有了a=c+(n−1)(b+c)的等量关系，我们会发现：从相遇点到入环点的距离(c)加上n−1 圈的环长(b+c)，恰好等于从链表头部到入环点的距离。
+因此，当发现slow与fast相遇时，我们再额外使用一个指针ptr(也可复用slow和fast)。起始，它指向链表头部；随后，它和slow每次向后移动一个位置。最终，它们会在入环点相遇。
+```
+
+![image-20220214163514531](README/image/image-20220214163514531.png)
+
+```
+class Solution {
+public:
+    ListNode *detectCycle(ListNode *head) {
+        ListNode *slow = head, *fast = head;
+        while (fast && fast->next) {
+            slow = slow->next;
+            fast = fast->next->next;
+            if (slow == fast) {
+                fast = head;
+                while (slow != fast) {
+                    slow = slow->next;
+                    fast = fast->next;
+                }
+                return slow;
+            }
+        }
+        return nullptr;
+    }
+};
+```
+
+
+
 ## [198. 打家劫舍](https://leetcode-cn.com/problems/house-robber/)
 
 #### 动态规划
@@ -5820,7 +5875,68 @@ public:
 
 
 
-#### 
+## [322. 零钱兑换](https://leetcode-cn.com/problems/coin-change/)
+
+#### 动态规划 贪心？
+
+```
+class Solution {
+public:
+    int coinChange(vector<int>& coins, int amount) {
+        sort(coins.begin(), coins.end());
+        int cnt = 0, index = coins.size()-1;
+        while (index >= 0) {
+            if (amount > 0) {
+                amount -= coins[index];
+                ++cnt;
+            } else if (amount < 0) {
+                amount += coins[index];
+                --cnt;
+                --index;
+            } else {
+                return cnt;
+            }
+        }
+        return -1;
+    }
+};
+```
+
+
+
+#### 回溯
+
+```
+class Solution {
+public:
+    int coinChange(vector<int>& coins, int amount) {
+        sort(coins.rbegin(), coins.rend());
+        if (amount <= 0) return -1;
+
+    }
+
+    int helper(vector<int>& coins, int amount, int cnt, int index) {
+        if (amount < 0) return -1;
+        else if (amount == 0) return cnt;
+        int ret = helper(coins, amount-coins[index], cnt+1, i);
+        for (int i = index; i < coins.size(); ++i) {
+
+            
+            if (ret <= 0) 
+        }
+    }
+};
+```
+
+
+
+## [347. 前 K 个高频元素](https://leetcode-cn.com/problems/top-k-frequent-elements/)
+
+#### hashmap
+
+```
+
+```
 
 
 
