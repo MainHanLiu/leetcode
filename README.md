@@ -5080,6 +5080,40 @@ public:
 
 
 
+## [31. 下一个排列](https://leetcode-cn.com/problems/next-permutation/)
+
+#### 官方题解
+
+![image-20220218210947665](README/image/image-20220218210947665.png)
+
+1.我们希望下一个数比当前数大，这样才满足“下一个排列”的定义。因此只需要将后面的「大数」与前面的「小数」交换，就能得到一个更大的数。比如 12385764，将 5 和 6 交换并对后面排序就能得到一个更大的数 12386457。
+
+2.我们还希望下一个数增加的幅度尽可能的小，这样才满足“下一个排列与当前排列紧邻“的要求。为了满足这个要求，我们需要：
+
+(1)在尽可能靠右的低位进行交换，需要从后向前查找
+(2)将一个 尽可能小的「大数」 与前面的「小数」交换。比如 12385764，下一个排列应该把 5 和 6交换
+(3)将「大数」换到前面后，需要将「大数」后面的所有数重置为升序，升序排列就是最小的排列。以 12385764为例：首先按照上一步，交换 5 和 6，得到 12386754；然后需要将 6 之后的数重置为升序，得到 12386457。显然 12386457比 12386754更小，12386457就是 12386457的下一个排列
+
+
+
+```
+class Solution {
+public:
+    void nextPermutation(vector<int>& nums) {
+        int i = nums.size() - 2;
+        while (i >= 0 && nums[i] >= nums[i+1]) i--;
+        if (i>=0) {
+            int j = nums.size() - 1; 
+            while (j >= 0 && nums[i] >= nums[j]) j--;
+            swap(nums[i], nums[j]);
+        }
+        reverse(nums.begin()+i+1, nums.end());
+    }
+};
+```
+
+
+
 ## [33. 搜索旋转排序数组](https://leetcode-cn.com/problems/search-in-rotated-sorted-array/)
 
 #### 一次二分法**
@@ -5539,6 +5573,39 @@ public:
 };
 ```
 
+#### 双指针**
+
+```
+class Solution {
+public:
+    void sortColors(vector<int>& nums) {
+        int p0 = 0, p2 = nums.size()-1;
+        for (int i = 0; i <= p2; ++i) {//注意i<=p2
+            if (nums[i] == 0) {
+                swap(nums[p0++], nums[i]);
+            } else if (nums[i] == 2) {
+                swap(nums[p2--], nums[i--]);//注意可能将0/1交换到前面，要判断0的情况，i--进行回退
+            }
+        }
+    }
+};
+```
+
+```
+class Solution {
+public:
+    void sortColors(vector<int>& nums) {
+        int p0 = 0, p1 = 0;
+        for (int i = 0; i <nums.size(); ++i) {
+            int num = nums[i];
+            nums[i] = 2;
+            if (num < 2) nums[p1++] = 1;//0、1均会赋值和移动指针
+            if (num < 1) nums[p0++] = 0;//0时移动指针，会覆盖1
+        }
+    }
+};
+```
+
 
 
 ## [78. 子集](https://leetcode-cn.com/problems/subsets/)
@@ -5811,6 +5878,8 @@ public:
 
 #### 动态规划 O(n*n)
 
+定义dp[i] 为考虑前 i 个元素，以第 i 个数字结尾的最长上升子序列的长度，注意 nums[i] 必须被选取。
+
 *dp*[*i*]=max(*dp*[*j*])+1,其中0≤*j*<*i*且*num*[*j*]<*num*[*i*]
 
 不能返回最后一个状态值，最后一个状态值只表示以 nums[size()-1]结尾的「上升子序列」的长度，状态数组dp 的最大值才是题目要求的结果。
@@ -5826,9 +5895,10 @@ public:
             while (j--) {
                 if (nums[j] < nums[i]) {
                     dp[i] = max(dp[i], dp[j]+1);
-                    res = max (res, dp[i]);
+                    
                 }
             }
+            res = max (res, dp[i]);
         }
         return res;
     }
@@ -5837,13 +5907,37 @@ public:
 
 #### 动态规划+二分 O(nlogn)
 
-```
+dis[len] ，表示长度为 len+1 的最长上升子序列的末尾元素的最小值
+
+比如序列是78912345，前三个遍历完以后dis是789，这时候遍历到1，就得把1放到合适的位置，于是在dis二分查找1的位置，变成了189（如果序列在此时结束，因为len不变，所以依旧输出3），再遍历到2成为129，然后是123直到12345 
 
 ```
+class Solution {
+public:
+    int lengthOfLIS(vector<int>& nums) {
+        int len = 1;
+        vector<int> dis(1,nums[0]);
+        for (int i = 1; i < nums.size(); ++i) {
+            if (dis[len-1] < nums[i]) {
+                dis.emplace_back(nums[i]),++len;
+            } else {
+                int left = 0, right = len-1, mid;
+                while (left <= right) {
+                    mid = left + ((right-left)>>1);
+                    if (dis[mid] < nums[i]) left = mid + 1;
+                    else right = mid - 1;
+                }
+                dis[left] = nums[i];//此处left不进行边界判断是因为在if处已经排除掉该情况
+            }
+        }
+        return len;
+    }
+};
+```
 
 
 
-#### 索引-pair hash存储(x)错误
+#### 索引-pair hash存储  (x)错误
 
 ```
 //无法通过[0,1,0,3,2,3]
@@ -5877,65 +5971,138 @@ public:
 
 ## [322. 零钱兑换](https://leetcode-cn.com/problems/coin-change/)
 
-#### 动态规划 贪心？
+#### 动态规划
+
+```
+输入: coins = [1, 2, 5], amount = 11
+凑成面值为 11 的最少硬币个数可以由以下三者的最小值得到：
+
+凑成面值为 10 的最少硬币个数 + 面值为 1 的这一枚硬币；
+凑成面值为 9 的最少硬币个数 + 面值为 2 的这一枚硬币；
+凑成面值为 6 的最少硬币个数 + 面值为 5 的这一枚硬币。
+即 dp[11] = min (dp[10] + 1, dp[9] + 1, dp[6] + 1)。
+
+可以直接把问题的问法设计成状态。
+
+第 1 步：定义「状态」。dp[i] ：凑齐总价值 i 需要的最少硬币个数；
+第 2 步：写出「状态转移方程」。根据对示例 1 的分析：
+
+dp[amount] = min(dp[amount], 1 + dp[amount - coins[i]]) for i in [0, len - 1] if coins[i] <= amount
+```
 
 ```
 class Solution {
 public:
     int coinChange(vector<int>& coins, int amount) {
-        sort(coins.begin(), coins.end());
-        int cnt = 0, index = coins.size()-1;
-        while (index >= 0) {
-            if (amount > 0) {
-                amount -= coins[index];
-                ++cnt;
-            } else if (amount < 0) {
-                amount += coins[index];
-                --cnt;
-                --index;
-            } else {
-                return cnt;
+        vector<int> dp(amount+1, amount+1);
+        dp[0] = 0;
+        for (int i = 1; i <= amount; ++i) {
+            for (const auto &coin : coins) {
+                if (i-coin>=0 && dp[i-coin] != amount+1) {
+                    dp[i] = min(dp[i], dp[i-coin]+1);
+                }
             }
         }
-        return -1;
+        return dp[amount] == amount+1 ? -1 : dp[amount];
     }
 };
 ```
-
-
-
-#### 回溯
-
-```
-class Solution {
-public:
-    int coinChange(vector<int>& coins, int amount) {
-        sort(coins.rbegin(), coins.rend());
-        if (amount <= 0) return -1;
-
-    }
-
-    int helper(vector<int>& coins, int amount, int cnt, int index) {
-        if (amount < 0) return -1;
-        else if (amount == 0) return cnt;
-        int ret = helper(coins, amount-coins[index], cnt+1, i);
-        for (int i = index; i < coins.size(); ++i) {
-
-            
-            if (ret <= 0) 
-        }
-    }
-};
-```
-
-
 
 ## [347. 前 K 个高频元素](https://leetcode-cn.com/problems/top-k-frequent-elements/)
 
-#### hashmap
+#### TopK问题 ：hashmap+小顶堆
 
 ```
+class Solution {
+public:
+    struct cmp{
+        bool operator() (pair<int,int> &lhs, pair<int,int> &rhs) {
+            return lhs.second > rhs.second;
+        }
+    };
+    // static bool cmp(pair<int,int> &lhs, pair<int,int> &rhs) {
+    //     return lhs.second > rhs.second;
+    // }
 
+    vector<int> topKFrequent(vector<int>& nums, int k) {
+        unordered_map<int,int> HashMap;
+        for (const auto &num : nums) ++HashMap[num];
+
+        priority_queue<pair<int,int>, vector<pair<int,int>>, cmp> pq;
+        // priority_queue<pair<int,int>, vector<pair<int,int>>, decltype(&cmp)> pq(cmp);
+        for (const auto &[num, tims] : HashMap) {
+            if (pq.size() == k) {
+                if (pq.top().second < tims) {
+                    pq.pop();
+                    pq.push({num,tims});
+                }
+            } else {
+                pq.push({num, tims});
+            }
+        }
+
+        vector<int> res(k);
+        while (k--) {
+            res[k] = pq.top().first;
+            pq.pop();
+        }
+        return res;
+    }
+};
+```
+
+```
+优先队列默认大顶堆
+less为小顶堆，greater为大顶堆
+```
+
+
+
+## [739. 每日温度](https://leetcode-cn.com/problems/daily-temperatures/)
+
+#### 逆序指针**（self）
+
+```
+class Solution {
+public:
+    vector<int> dailyTemperatures(vector<int>& temperatures) {
+        int n = temperatures.size();
+        vector<int> answer(n,0);
+        for (int i = n-2; i >= 0; --i) {
+            if (temperatures[i] < temperatures[i+1]) {
+                answer[i] = 1;
+            } else {
+                int index = i + 1;
+                while (temperatures[i]>=temperatures[index] && answer[index] != 0) {
+                    index += answer[index];
+                }
+                if (temperatures[i] < temperatures[index]) answer[i] = index-i;
+            }
+        }
+        return answer;
+    }
+};
+```
+
+#### 单调栈（占用空间更多）(比较次数也更多？)
+
+```
+class Solution {
+public:
+    vector<int> dailyTemperatures(vector<int>& temperatures) {
+        int n = temperatures.size();
+        stack<int> stk;stk.push(0);
+        vector<int> answer(n,0);
+        for (int i = 1; i < n; ++i) {
+            while (!stk.empty() && temperatures[stk.top()]<temperatures[i]) {
+                answer[stk.top()] = i - stk.top();
+                stk.pop();
+            }
+            stk.push(i);
+        }
+        return answer;
+    }
+};
 ```
 
 
