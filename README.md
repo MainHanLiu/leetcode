@@ -5633,6 +5633,81 @@ public:
 
 
 
+## [79. 单词搜索](https://leetcode-cn.com/problems/word-search/)
+
+#### dfs
+
+```
+class Solution {
+public:
+    bool exist(vector<vector<char>>& board, string word) {
+        int m = board.size(), n = board[0].size();
+        vector<vector<bool>> visited(m, vector<bool>(n, false));
+        for (int i = 0; i < m; ++i) {
+            for (int j = 0; j < n; ++j){     
+                bool ret = dfs(board, word, 0, i, j, visited);
+                if (ret) return true;
+            }
+        }
+        return false;
+    }
+
+    bool dfs(vector<vector<char>>& board, string &word, int index, int row, int clown, vector<vector<bool>> &visited) {
+        if (index == word.size()) return true;
+        if (row<0 || row==board.size() || clown<0 || clown==board[0].size() || visited[row][clown]) return false;  
+        bool ret = false;
+        if (word[index]==board[row][clown]) {
+            visited[row][clown] = true;
+            ret =
+            dfs(board, word, index+1, row-1, clown, visited) ||
+            dfs(board, word, index+1, row+1, clown, visited) ||
+            dfs(board, word, index+1, row, clown-1, visited) ||
+            dfs(board, word, index+1, row, clown+1, visited);
+            if (!ret) visited[row][clown] = false;//注意需要状态回退
+        }
+        return ret;
+    }
+};
+```
+
+方向数组（这种方法运行时间是上述的七倍，为什么？）
+
+```
+class Solution {
+public:
+    bool exist(vector<vector<char>>& board, string word) {
+        int m = board.size(), n = board[0].size();
+        vector<vector<bool>> visited(m, vector<bool>(n, false));
+        for (int i = 0; i < m; ++i) {
+            for (int j = 0; j < n; ++j){     
+                bool ret = dfs(board, word, 0, i, j, visited);
+                if (ret) return true;
+            }
+        }
+        return false;
+    }
+
+    bool dfs(vector<vector<char>>& board, string &word, int index, int row, int clown, vector<vector<bool>> &visited) {
+        if (index == word.size()) return true;
+        if (row<0 || row==board.size() || clown<0 || clown==board[0].size() || visited[row][clown]) return false;  
+        if (word[index]==board[row][clown]) {
+            visited[row][clown] = true;
+            vector<pair<int, int>> directions{{0, 1}, {0, -1}, {1, 0}, {-1, 0}};
+            bool ret = false;
+            for (const auto& dir: directions) {
+                int newR = row + dir.first, newC = clown + dir.second;
+                ret = dfs(board, word, index+1, newR, newC, visited);
+                if (ret) return true;
+            }
+            if (!ret) visited[row][clown] = false;//注意需要状态回退
+        }
+        return false;
+    }
+};
+```
+
+
+
 ## [98. 验证二叉搜索树](https://leetcode-cn.com/problems/validate-binary-search-tree/)
 
 #### 递归
@@ -5716,6 +5791,95 @@ public:
 
 
 
+## [114. 二叉树展开为链表](https://leetcode-cn.com/problems/flatten-binary-tree-to-linked-list/)
+
+#### 先序遍历存储 + 连接
+
+```
+class Solution {
+public:
+    void flatten(TreeNode* root) {
+        if (!root) return;
+        queue<TreeNode*> tmpQue;
+        preorder(root, tmpQue);
+        TreeNode *dummyHead = new TreeNode();
+        TreeNode *tmpPtr = dummyHead; 
+        while (!tmpQue.empty()) {
+            TreeNode *tmpNode = tmpQue.front();
+            tmpQue.pop();
+            tmpNode->left = nullptr;
+            tmpPtr->right = tmpNode;
+            tmpPtr = tmpPtr->right;
+        }
+        tmpPtr->right = nullptr;
+    }
+
+    void preorder(TreeNode* root, queue<TreeNode*> &tmpQue) {
+        if (!root) return;
+        tmpQue.push(root);
+        preorder(root->left, tmpQue);
+        preorder(root->right,tmpQue);
+    }
+};
+```
+
+#### 插入法
+
+```
+可以发现展开的顺序其实就是二叉树的先序遍历。算法和 94 题中序遍历的 Morris 算法有些神似，我们需要两步完成这道题。
+
+将左子树插入到右子树的地方
+将原来的右子树接到左子树的最右边节点
+考虑新的右子树的根节点，一直重复上边的过程，直到新的右子树为 null
+```
+
+```
+class Solution {
+public:
+    void flatten(TreeNode* root) {
+        while (root) {
+            if (!root->left) {
+                root = root->right;
+            } else {
+                TreeNode *tmpNode = root->left;
+                while (tmpNode->right) {
+                    tmpNode = tmpNode->right;
+                }
+                tmpNode->right = root->right;
+                root->right = root->left;
+                root->left = nullptr;
+            }
+        }
+    }
+};
+```
+
+#### 两侧展开为链表后拼接
+
+```
+首先将根节点的左子树变成链表
+其次将根节点的右子树变成链表
+最后将变成链表的右子树放在变成链表的左子树的最右边
+```
+
+```
+class Solution {
+public:
+    void flatten(TreeNode* root) {
+        if (!root) return;
+        flatten(root->left);
+        flatten(root->right);
+        TreeNode *tmp = root->right;
+        root->right = root->left;
+        root->left = nullptr;
+        while (root->right) root = root->right;
+        root->right = tmp;
+    }
+};
+```
+
+
+
 ## [142. 环形链表 II](https://leetcode-cn.com/problems/linked-list-cycle-ii/)
 
 #### hashset
@@ -5766,6 +5930,145 @@ public:
         }
         return nullptr;
     }
+};
+```
+
+
+
+
+
+## [146. LRU 缓存](https://leetcode-cn.com/problems/lru-cache/) 
+
+```
+queue + set 记录访问 ：
+	错误，set无法记录重复访问
+queue + queue 记录访问 ：
+	错误，AuxQue无法处理非顺序访问	
+```
+
+#### 哈希链表：双向链表+hashmap(key-listptr)**
+
+```
+struct DLinkedNode {
+    int key;
+    int value;
+    DLinkedNode *prev;
+    DLinkedNode *next;
+    DLinkedNode() : key(0), value(0), prev(nullptr), next(nullptr) {};
+    DLinkedNode(int _key, int _value) : key(_key), value(_value), prev(nullptr), next(nullptr) {};
+};//定义双向链表
+
+class LRUCache {
+private:
+    unordered_map<int, DLinkedNode*> HashMap;
+    DLinkedNode *dummyHead;
+    DLinkedNode *dummyTail;
+    int capacity;
+public:
+    LRUCache(int _capacity) :capacity(_capacity) {
+        dummyHead = new DLinkedNode();
+        dummyTail = new DLinkedNode();
+        dummyHead->next = dummyTail;
+        dummyTail->prev = dummyHead;
+    }
+    
+    int get(int key) {
+        if (HashMap.count(key)) {
+            moveToHead(HashMap[key]);
+            return HashMap[key]->value;
+        } else {
+            return -1;
+        }
+    }
+    
+    void put(int key, int value) {
+        if (HashMap.count(key)) {
+            HashMap[key]->value = value;
+            moveToHead(HashMap[key]);
+        } else {
+            DLinkedNode *node = new DLinkedNode(key, value);
+            HashMap[key] = node;
+            addToHead(node);
+            if (HashMap.size() > capacity) deleteTail();
+        }
+    }
+
+    void addToHead(DLinkedNode *node) {
+        //dummyhead <-> dummynext
+        //          node
+        node->prev = dummyHead;
+        node->next = dummyHead->next;
+        dummyHead->next->prev = node;
+        dummyHead->next = node;
+    }
+
+    void removeNode(DLinkedNode *node) {
+        // prev  node  next
+        // atten : not delete
+        node->prev->next = node->next;
+        node->next->prev = node->prev;
+    }
+
+    void moveToHead(DLinkedNode *node) {
+        removeNode(node);
+        addToHead(node);
+    }
+
+    void deleteTail() {
+        DLinkedNode *node = dummyTail->prev;
+        HashMap.erase(node->key);
+        removeNode(node);
+        delete node;
+    }
+};
+
+/**
+ * Your LRUCache object will be instantiated and called as such:
+ * LRUCache* obj = new LRUCache(capacity);
+ * int param_1 = obj->get(key);
+ * obj->put(key,value);
+ */
+```
+
+```
+“为什么必须要用双向链表”的问题了，因为我们需要删除操作。删除一个节点不光要得到该节点本身的指针，也需要操作其前驱节点的指针，而双向链表才能支持直接查找前驱，保证操作的时间复杂度 O(1)
+```
+
+#### 时空开销更大
+
+```
+class LRUCache {
+private:
+    int capacity;
+    list<pair<int, int>> cache;
+    unordered_map<int, list<pair<int, int>>::iterator> map;
+public:
+    LRUCache(int _capacity) : capacity(_capacity) {
+    }
+
+    int get(int key) {
+        if (map.find(key) == map.end()) return -1;
+        auto key_value = *map[key];
+        cache.erase(map[key]);
+        cache.push_front(key_value);
+        map[key] = cache.begin();
+        return key_value.second;
+    }
+
+    void put(int key, int value) {
+        if (map.find(key) == map.end()) {
+            if (cache.size() == capacity) {
+                map.erase(cache.back().first);
+                cache.pop_back();
+            }
+        }
+        else {
+            cache.erase(map[key]);
+        }
+        cache.push_front({key, value});
+        map[key] = cache.begin();
+    }
+
 };
 ```
 
@@ -5873,6 +6176,32 @@ public:
 ```
 
 #### 基于堆排序 ？
+
+
+
+## [236. 二叉树的最近公共祖先](https://leetcode-cn.com/problems/lowest-common-ancestor-of-a-binary-tree/)
+
+#### 递归
+
+p q 在某节点的同一侧子树时，left和right必有一个为null,非null一侧遇p或q的任何一个即可返回，
+
+p q在某节点的两侧子树时，root即为最近公共祖先，root可能会随left或right向上返回
+
+```
+class Solution {
+public:
+    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
+        if (!root || root==p || root==q) return root;
+        TreeNode *left = lowestCommonAncestor(root->left, p, q);
+        TreeNode *right = lowestCommonAncestor(root->right, p, q);
+        if (!left) return right;
+        if (!right) return left;
+        return root;
+    }
+};
+```
+
+
 
 ## [300. 最长递增子序列](https://leetcode-cn.com/problems/longest-increasing-subsequence/)
 
@@ -6057,6 +6386,92 @@ less为小顶堆，greater为大顶堆
 ```
 
 
+
+
+
+## [394. 字符串解码](https://leetcode-cn.com/problems/decode-string/)
+
+#### 递归
+
+```
+class Solution {
+public:
+    string analysis(string &s, int& index) {
+        string res;
+        int num = 0;
+        string temp;
+        while (index < s.size()) {
+            if (s[index] >= '0' && s[index] <= '9') {
+                num = 10 * num + s[index] - '0';
+            }
+            else if (s[index] == '[') {
+                temp = analysis(s, ++index);//碰到'[',开始递归
+                while(num--) res += temp;
+                num = 0;//num置零
+            } else if (s[index] == ']') {
+                break;//碰到']',结束递归
+            } else {
+                res += s[index];
+            } 
+            ++index;
+        }
+        return res;
+    }
+
+    string decodeString(string s) {
+        int index = 0;
+        return analysis(s, index);
+    }
+};
+
+```
+
+
+
+#### 栈(self)
+
+```
+class Solution {
+public:
+    string decodeString(string s) {
+        stack<char> stk;
+        for (const auto & ch : s) {
+            if (ch == ']') {
+                string tmp = "";
+                while (stk.top() != '[') {
+                    tmp = stk.top() + tmp;
+                    stk.pop();
+                }
+                stk.pop();
+                int cnt = 0, tm = 1;
+                while (!stk.empty() && stk.top()>='0' && stk.top()<='9') { //访问栈之前要注意保证栈非空
+                    cnt = cnt + (stk.top()-'0') * tm; //注意此处读取的是char
+                    tm *= 10; //有多位数字时需要还原
+                    stk.pop();
+                }
+
+                while (cnt--) {
+                    for (const auto &ch : tmp) {
+                        stk.push(ch);
+                    }
+                }
+            } else {
+                stk.push(ch);
+            }
+        }
+        string res = "";
+        while (!stk.empty()) {
+            res = stk.top() + res;
+            stk.pop();
+        }
+        return res;
+    }
+};
+```
+
+
+
+#### 指针
 
 ## [739. 每日温度](https://leetcode-cn.com/problems/daily-temperatures/)
 
